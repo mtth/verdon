@@ -1,0 +1,29 @@
+{
+  "name": "verdon",
+  "version": "0.1.0",
+  "description": "A CLI for Avro things.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "avro"
+  ],
+  "author": {
+    "name": "Matthieu Monsch",
+    "email": "monsch@alum.mit.edu"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mtth/verdon.git"
+  },
+  "bin": {
+    "verdon": "bin/verdon"
+  },
+  "dependencies": {
+    "avsc": "^5.0.0-rc.5",
+    "request": "^2.79.0",
+    "yargs": "^6.5.0"
+  }
+}
