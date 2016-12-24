@@ -13,19 +13,45 @@ suite('actions', function () {
   suite('assemble', function () {
 
     test('existing protocol', function (done) {
-      actions.assemble('empty.avdl', {importHook}, function (err, str) {
+      actions.assemble('1.avdl', undefined, {importHook}, function (err, str) {
         assert.ifError(err);
         assert.equal(str, '{"protocol":"Empty"}');
         done();
       });
 
       function importHook(path, kind, cb) {
-        assert.equal(path, 'empty.avdl');
+        assert.equal(path, '1.avdl');
         assert.equal(kind, 'idl');
         cb(null, 'protocol Empty{}');
       }
     });
 
+    test('existing type', function (done) {
+      actions.assemble('1.avdl', 'Bar', {importHook}, function (err, str) {
+        assert.ifError(err);
+        assert.equal(str, '{"name":"Bar","type":"fixed","size":1}');
+        done();
+      });
+
+      function importHook(path, kind, cb) {
+        assert.equal(path, '1.avdl');
+        assert.equal(kind, 'idl');
+        cb(null, 'protocol Foo{fixed Bar(1);}');
+      }
+    });
+
+    test('missing type', function (done) {
+      actions.assemble('1.avdl', 'Bar', {importHook}, function (err) {
+        assert(/no such type/.test(err), err);
+        done();
+      });
+
+      function importHook(path, kind, cb) {
+        assert.equal(path, '1.avdl');
+        assert.equal(kind, 'idl');
+        cb(null, 'protocol Empty{}');
+      }
+    });
   });
 
   suite('call', function () {

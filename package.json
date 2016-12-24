@@ -1,6 +1,6 @@
 {
   "name": "verdon",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Avro RPC command line interface",
   "main": "./lib",
   "keywords": [

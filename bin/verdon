@@ -17,9 +17,11 @@ commander
 
 commander.command('assemble')
   .description(trim(`
-    Assemble an IDL specification into its schema.
+    Assemble a protocol's IDL specification at path <protocol> into its
+    corresponding JSON representation. If <type> is specified, this type's
+    schema will be output instead.
   `))
-  .arguments('<protocol>')
+  .arguments('<protocol> [<type>]')
   .action(exiting(actions.assemble));
 
 commander.command('call')
