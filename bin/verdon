@@ -39,7 +39,7 @@ commander.command('serve')
   .description(trim(`
     Create a fake server.
   `))
-  .arguments('<url> <protocol>')
+  .arguments('<address> <protocol>')
   .option('-s, --scope <string>', 'service scope')
   .action(exiting(actions.serve));
 

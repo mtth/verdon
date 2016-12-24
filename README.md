@@ -21,5 +21,5 @@ Avro RPC command line interface.
 + Setting up quick RPC servers:
 
   ```bash
-  $ verdon serve http://echo.avro.server:8117 ./Ping.avdl
+  $ verdon serve http://test.avro.server:8117 ./Test.avdl
   ```
