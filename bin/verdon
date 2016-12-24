@@ -5,21 +5,48 @@
 'use strict';
 
 const commander = require('commander');
-const fs = require('fs');
-const path = require('path');
+const verdon = require('../lib');
 
-commander
-  .version('0.1.0')
-  .usage('[cmd] [options] [<args> ...]\r\x1b[F'); // Skip the extra new-line.
+commander.version(require('../package').version);
 
-for (let fname of fs.readdirSync(__dirname)) {
-  let cmd = require(path.join(__dirname, fname));
-  let match = /verdon-(.*)/.exec(fname);
-  if (match) {
-    let name = match[1];
-    let desc = cmd.description().split('\n')[0].toLowerCase();
-    commander.command(name + ' ' + cmd.usage(), desc);
-  }
+commander.command('call')
+  .description(trim(`
+    Send a message to a remote service listening at <url>. If no <request> is
+    specified, it will be read from standard in.
+  `))
+  .arguments('<url> <message> [<request>]')
+  .option('-p, --protocol <path>', 'path to local protocol')
+  .option('-t, --transport <path>', 'path to transport module')
+  .action(exiting(verdon.call));
+
+commander.command('info')
+  .description(trim(`
+    Retrieve a remote service's protocol and expose it in various forms.
+  `))
+  .arguments('<url> [<message>]')
+  .option('-j, --json', 'output JSON')
+  .action(exiting(verdon.info));
+
+/** Trim description such that it aligns nicely with commander's defaults. */
+function trim(str) { return str.replace(/^  /gm, ''); }
+
+/** Wrap a function such that it exits when an error occurs. */
+function exiting(fn) {
+  return function () {
+    const args = [];
+    for (let i = 0; i < arguments.length; i++) {
+      args[i] = arguments[i];
+    }
+    args.push(function (err) {
+      if (err) {
+        console.error('  error: ' + (err.message || err.toString()));
+        process.exit(1);
+      }
+    });
+    // Note that the penultimate argument it the command itself (which we can
+    // use directly as an options object!).
+    return fn.apply(this, args);
+  };
 }
 
 commander.parse(process.argv);
