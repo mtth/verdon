@@ -7,7 +7,14 @@
 const commander = require('commander');
 const verdon = require('../lib');
 
-commander.version(require('../package').version);
+commander
+  .usage('verdon <command> [options] [<args> ...]')
+  .version(require('../package').version)
+  .action(function (cmd) {
+    // Default handler, called when none of the commands below match.
+    console.error(`  error: unknown command \`${cmd}'`);
+    process.exit(3);
+  });
 
 commander.command('call')
   .description(trim(`
@@ -16,6 +23,7 @@ commander.command('call')
   `))
   .arguments('<url> <message> [<request>]')
   .option('-p, --protocol <path>', 'path to local protocol')
+  .option('-s, --scope <string>', 'remote service scope')
   .option('-t, --transport <path>', 'path to transport module')
   .action(exiting(verdon.call));
 
@@ -25,7 +33,16 @@ commander.command('info')
   `))
   .arguments('<url> [<message>]')
   .option('-j, --json', 'output JSON')
+  .option('-s, --scope <string>', 'remote service scope')
   .action(exiting(verdon.info));
+
+commander.command('serve')
+  .description(trim(`
+    Create a fake server.
+  `))
+  .arguments('<url> <protocol>')
+  .option('-s, --scope <string>', 'service scope')
+  .action(exiting(verdon.serve));
 
 /** Trim description such that it aligns nicely with commander's defaults. */
 function trim(str) { return str.replace(/^  /gm, ''); }
@@ -37,11 +54,12 @@ function exiting(fn) {
     for (let i = 0; i < arguments.length; i++) {
       args[i] = arguments[i];
     }
-    args.push(function (err) {
+    args.push(function (err, str) {
       if (err) {
-        console.error('  error: ' + (err.message || err.toString()));
+        console.error(`  error: ${err.message || err.toString()}`);
         process.exit(1);
       }
+      console.log(str);
     });
     // Note that the penultimate argument it the command itself (which we can
     // use directly as an options object!).
@@ -49,4 +67,10 @@ function exiting(fn) {
   };
 }
 
-commander.parse(process.argv);
+if (process.argv.length > 2) {
+  commander.parse(process.argv);
+} else {
+  // By default, commander lets missing arguments through.
+  commander.outputHelp();
+  process.exit(2);
+}
