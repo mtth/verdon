@@ -1,10 +1,25 @@
 # Verdon
 
-A little Avro CLI.
+Avro RPC command line interface.
 
-Features (eventually):
+## Features
 
-+ Protocol discovery.
-+ Emitting RPC calls.
-+ Setting up quick RPC servers.
-+ Container based?
++ Discover remote protocols:
+
+  ```bash
+  $ verdon info --json http://ping.avro.server:8117
+  {"protocol": "Ping","messages":{"ping":{"request":[],"response":"string"}}}
+  ```
+
++ Emit RPC calls:
+
+  ```bash
+  $ verdon call http://echo.avro.server:8117 toUpperCase '{"str":"hi"}'
+  "HI"
+  ```
+
++ Setting up quick RPC servers:
+
+  ```bash
+  $ verdon serve http://echo.avro.server:8117 ./Ping.avdl
+  ```

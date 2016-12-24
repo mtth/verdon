@@ -1,10 +1,11 @@
 {
   "name": "verdon",
-  "version": "0.1.1",
-  "description": "A CLI for Avro things.",
+  "version": "0.1.2",
+  "description": "Avro RPC command line interface",
   "main": "./lib",
   "keywords": [
-    "avro"
+    "avro",
+    "rpc"
   ],
   "author": {
     "name": "Matthieu Monsch",
