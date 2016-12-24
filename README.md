@@ -1,4 +1,4 @@
-# Verdon
+# Verdon [![NPM version](https://img.shields.io/npm/v/verdon.svg)](https://www.npmjs.com/package/verdon)
 
 Avro RPC command line interface.
 
