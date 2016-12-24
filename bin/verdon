@@ -8,13 +8,12 @@ const commander = require('commander');
 const verdon = require('../lib');
 
 commander
-  .usage('verdon <command> [options] [<args> ...]')
+  .usage('\r  Usage:  verdon <command> [options] [<args> ...]')
   .version(require('../package').version)
-  .action(function (cmd) {
+  .action(exiting(function (cmd, opts, cb) {
     // Default handler, called when none of the commands below match.
-    console.error(`  error: unknown command \`${cmd}'`);
-    process.exit(3);
-  });
+    cb(new Error(`unknown command \`${cmd}'`));
+  }));
 
 commander.command('call')
   .description(trim(`
@@ -56,10 +55,12 @@ function exiting(fn) {
     }
     args.push(function (err, str) {
       if (err) {
-        console.error(`  error: ${err.message || err.toString()}`);
+        console.error(`\n  error: ${err.message || err.toString()}`);
         process.exit(1);
       }
-      console.log(str);
+      if (str) {
+        console.log(str);
+      }
     });
     // Note that the penultimate argument is the command itself (which we can
     // use directly as an options object!).
