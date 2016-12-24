@@ -61,7 +61,7 @@ function exiting(fn) {
       }
       console.log(str);
     });
-    // Note that the penultimate argument it the command itself (which we can
+    // Note that the penultimate argument is the command itself (which we can
     // use directly as an options object!).
     return fn.apply(this, args);
   };

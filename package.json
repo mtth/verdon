@@ -21,7 +21,6 @@
   "dependencies": {
     "avsc": "^5.0.0-rc.5",
     "commander": "^2.9.0",
-    "express": "^4.14.0",
     "request": "^2.79.0"
   }
 }
