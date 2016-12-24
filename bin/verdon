@@ -4,63 +4,22 @@
 
 'use strict';
 
-const verdon = require('../');
-const yargs = require('yargs');
+const commander = require('commander');
+const fs = require('fs');
+const path = require('path');
 
-yargs
-  .option('protocol', {
-    global: true,
-    help: 'path to protocol IDL file'
-  })
-  .option('scope', {
-    global: true,
-    help: 'transport scope'
-  })
-  .command({
-    command: 'info <address> [<message>]',
-    desc: 'view available RPCs',
-    handler: (argv) => {
-      const cfg = {
-        address: argv.address,
-        path: argv.protocol,
-        scope: argv.scope
-      };
-      verdon.info(cfg, (err, svc) => {
-        if (err) {
-          throw err;
-        }
-        if (argv.message) {
-          const message = svc.getMessage(argv.message);
-          if (!message) {
-            throw new Error('no such message');
-          }
-          console.log(message.getDocumentation() || 'No documentation.');
-        } else {
-          console.log(svc.getDocumentation());
-          for (let message of svc.getMessages()) {
-            console.log(message.getName());
-          }
-        }
-      });
-    }
-  })
-  .command({
-    command: 'call <address> <message> <request>',
-    desc: 'execute RPC',
-    handler: (argv) => {
-      const cfg = {
-        address: argv.address,
-        path: argv.protocol,
-        scope: argv.scope
-      };
-      verdon.sendMessage(cfg, argv.message, argv.request, (err, res) => {
-        if (err) {
-          console.error(err);
-          process.exit(1);
-        }
-        console.log(res);
-      });
-    }
-  })
-  .help()
-  .parse(process.argv.slice(2));
+commander
+  .version('0.1.0')
+  .usage('[cmd] [options] [<args> ...]\r\x1b[F'); // Skip the extra new-line.
+
+for (let fname of fs.readdirSync(__dirname)) {
+  let cmd = require(path.join(__dirname, fname));
+  let match = /verdon-(.*)/.exec(fname);
+  if (match) {
+    let name = match[1];
+    let desc = cmd.description().split('\n')[0].toLowerCase();
+    commander.command(name + ' ' + cmd.usage(), desc);
+  }
+}
+
+commander.parse(process.argv);
