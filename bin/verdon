@@ -5,7 +5,7 @@
 'use strict';
 
 const commander = require('commander');
-const verdon = require('../lib');
+const actions = require('../lib/actions');
 
 commander
   .usage('\r  Usage:  verdon <command> [options] [<args> ...]')
@@ -24,7 +24,7 @@ commander.command('call')
   .option('-p, --protocol <path>', 'path to local protocol')
   .option('-s, --scope <string>', 'remote service scope')
   .option('-t, --transport <path>', 'path to transport module')
-  .action(exiting(verdon.call));
+  .action(exiting(actions.call));
 
 commander.command('info')
   .description(trim(`
@@ -33,7 +33,7 @@ commander.command('info')
   .arguments('<url> [<message>]')
   .option('-j, --json', 'output JSON')
   .option('-s, --scope <string>', 'remote service scope')
-  .action(exiting(verdon.info));
+  .action(exiting(actions.info));
 
 commander.command('serve')
   .description(trim(`
@@ -41,7 +41,7 @@ commander.command('serve')
   `))
   .arguments('<url> <protocol>')
   .option('-s, --scope <string>', 'service scope')
-  .action(exiting(verdon.serve));
+  .action(exiting(actions.serve));
 
 /** Trim description such that it aligns nicely with commander's defaults. */
 function trim(str) { return str.replace(/^  /gm, ''); }

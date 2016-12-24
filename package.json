@@ -22,5 +22,14 @@
     "avsc": "^5.0.0-rc.5",
     "commander": "^2.9.0",
     "request": "^2.79.0"
+  },
+  "devDependencies": {
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0"
+  },
+  "scripts": {
+    "cover": "istanbul cover _mocha",
+    "clean": "rm -rf coverage dist node_modules",
+    "test": "mocha"
   }
 }
