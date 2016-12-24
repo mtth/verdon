@@ -10,6 +10,24 @@ const stream = require('stream');
 
 suite('actions', function () {
 
+  suite('assemble', function () {
+
+    test('existing protocol', function (done) {
+      actions.assemble('empty.avdl', {importHook}, function (err, str) {
+        assert.ifError(err);
+        assert.equal(str, '{"protocol":"Empty"}');
+        done();
+      });
+
+      function importHook(path, kind, cb) {
+        assert.equal(path, 'empty.avdl');
+        assert.equal(kind, 'idl');
+        cb(null, 'protocol Empty{}');
+      }
+    });
+
+  });
+
   suite('call', function () {
 
     test('same protocol', function (done) {

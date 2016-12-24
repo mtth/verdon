@@ -15,6 +15,13 @@ commander
     cb(new Error(`unknown command \`${cmd}'`));
   }));
 
+commander.command('assemble')
+  .description(trim(`
+    Assemble an IDL specification into its schema.
+  `))
+  .arguments('<protocol>')
+  .action(exiting(actions.assemble));
+
 commander.command('call')
   .description(trim(`
     Send a message to a remote service listening at <url>. If no <request> is
