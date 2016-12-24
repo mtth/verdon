@@ -16,6 +16,9 @@
     "type": "git",
     "url": "git://github.com/mtth/verdon.git"
   },
+  "engines": {
+    "node": ">=6.0.0"
+  },
   "bin": {
     "verdon": "bin/verdon"
   },
