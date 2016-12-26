@@ -4,8 +4,10 @@
 
 'use strict';
 
+const chalk = require('chalk');
 const commander = require('commander');
 const actions = require('../lib/actions');
+const utils = require('../lib/utils');
 
 commander
   .usage('\r  Usage:  verdon <command> [options] [<args> ...]')
@@ -16,44 +18,41 @@ commander
   }));
 
 commander.command('assemble')
-  .description(trim(`
+  .description(utils.indent(`
     Assemble a protocol's IDL specification at path <protocol> into its
     corresponding JSON representation. If <type> is specified, this type's
     schema will be output instead.
-  `))
+  `, 2))
   .arguments('<protocol> [<type>]')
   .action(exiting(actions.assemble));
 
 commander.command('call')
-  .description(trim(`
+  .description(utils.indent(`
     Send a message to a remote service listening at <url>. If no <request> is
     specified, it will be read from standard in.
-  `))
+  `, 2))
   .arguments('<url> <message> [<request>]')
-  .option('-p, --protocol <path>', 'path to local protocol')
-  .option('-s, --scope <string>', 'remote service scope')
-  .option('-t, --transport <path>', 'path to transport module')
+  .option('--protocol <path>', 'path to local protocol')
+  .option('--scope <string>', 'remote service scope')
+  .option('--transport <path>', 'path to transport module')
   .action(exiting(actions.call));
 
 commander.command('info')
-  .description(trim(`
+  .description(utils.indent(`
     Retrieve a remote service's protocol and expose it in various forms.
-  `))
+  `, 2))
   .arguments('<url> [<message>]')
-  .option('-j, --json', 'output JSON')
-  .option('-s, --scope <string>', 'remote service scope')
+  .option('--json', 'output JSON')
+  .option('--scope <string>', 'remote service scope')
   .action(exiting(actions.info));
 
 commander.command('serve')
-  .description(trim(`
+  .description(utils.indent(`
     Create a fake server.
-  `))
+  `, 2))
   .arguments('<address> <protocol>')
-  .option('-s, --scope <string>', 'service scope')
+  .option('--scope <string>', 'service scope')
   .action(exiting(actions.serve));
-
-/** Trim description such that it aligns nicely with commander's defaults. */
-function trim(str) { return str.replace(/^  /gm, ''); }
 
 /** Wrap a function such that it exits when an error occurs. */
 function exiting(fn) {
@@ -64,7 +63,10 @@ function exiting(fn) {
     }
     args.push(function (err, str) {
       if (err) {
-        console.error(`\n  error: ${err.message || err.toString()}`);
+        const msg = chalk.red(err instanceof Error ?
+          err.message :
+          JSON.stringify(err));
+        console.error(`\n  error: ${msg}`);
         process.exit(1);
       }
       if (str) {
