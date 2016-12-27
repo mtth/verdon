@@ -5,6 +5,8 @@
 'use strict';
 
 // TODO: Shorten description of commands to single line.
+// TODO: Rename commands to more explicit names (e.g. start-mock-server).
+// TODO: Add command to check compatibility of two protocols.
 
 const chalk = require('chalk');
 const commander = require('commander');
