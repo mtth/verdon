@@ -80,6 +80,33 @@ suite('actions', function () {
         done();
       });
     });
+
+    test('send header', function (done) {
+      const tps = createTransports();
+      const ptcl = avro.readProtocol('protocol Echo{string upper(string s);}');
+      const svc = avro.Service.forProtocol(ptcl);
+      const stringType = avro.Type.forSchema('string');
+      const val = 'bar';
+      const buf = stringType.toBuffer(val);
+      let sawHeader = false;
+      svc.createServer()
+        .use(function (wreq, wres, next) {
+          assert(buf.equals(wreq.getHeader().foo));
+          sawHeader = true;
+          next();
+        })
+        .onUpper(function (str, cb) { cb(null, str.toUpperCase()); })
+        .createListener(tps[1]);
+      const opts = {
+        header: [{key: 'foo', name: 'string', val: stringType.toString(val)}]
+      };
+      actions.call(tps[0], 'upper', '{"s": "abc"}', opts, function (err, str) {
+        assert.ifError(err);
+        assert.equal(str, '"ABC"');
+        assert(sawHeader);
+        done();
+      });
+    });
   });
 
   suite('info', function () {

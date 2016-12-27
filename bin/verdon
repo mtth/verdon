@@ -4,10 +4,13 @@
 
 'use strict';
 
+// TODO: Shorten description of commands to single line.
+
 const chalk = require('chalk');
 const commander = require('commander');
 const actions = require('../lib/actions');
 const utils = require('../lib/utils');
+
 
 commander
   .usage('\r  Usage:  verdon <command> [options] [<args> ...]')
@@ -32,6 +35,7 @@ commander.command('call')
     specified, it will be read from standard in.
   `, 2))
   .arguments('<url> <message> [<request>]')
+  .option('--header <key:type:value>', 'JSON header', collectHeaders, [])
   .option('--protocol <path>', 'path to local protocol')
   .option('--scope <string>', 'remote service scope')
   .option('--transport <path>', 'path to transport module')
@@ -77,6 +81,30 @@ function exiting(fn) {
     // use directly as an options object!).
     return fn.apply(this, args);
   };
+}
+
+/** Gather and serialize headers. */
+function collectHeaders(hdr, acc) {
+  // --header 'key:type=jsonVal' or --header key=stringVal
+  const prefixEnd = hdr.indexOf('=');
+  if (!~prefixEnd) {
+    throw new Error(`invalid header: ${hdr}`);
+  }
+  const prefix = hdr.slice(0, prefixEnd);
+  const suffix = hdr.slice(prefixEnd + 1);
+  const keyEnd = prefix.indexOf(':');
+  acc.push(~keyEnd ?
+    {
+      key: prefix.slice(0, keyEnd),
+      name: prefix.slice(keyEnd + 1),
+      val: suffix
+    } :
+    {
+      key: prefix,
+      name: 'string',
+      val: `"${suffix}"` // Make this a valid JSON string.
+    });
+  return acc;
 }
 
 if (process.argv.length > 2) {
