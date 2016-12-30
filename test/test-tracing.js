@@ -83,6 +83,24 @@ suite('tracing', function () {
       });
   });
 
+  test('missing outgoing trace', function (done) {
+    client.neg(5, function (err) {
+      assert(/missing outgoing trace/.test(err), err);
+      done();
+    });
+  });
+
+  test('duplicate trace', function (done) {
+    server.getStubs()[0].on('incomingCall', function (ctx) {
+      // Pre-populate a trace.
+      ctx.getLocals().trace = tracing.createTrace();
+    });
+    client.neg(3, {trace: tracing.createTrace()}, function (err) {
+      assert(/duplicate trace/.test(err), err);
+      done();
+    });
+  });
+
   function createClient(server) {
     const client = svc.createClient({server});
     client.use(tracing.clientTracing(client));
