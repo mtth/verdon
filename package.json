@@ -27,7 +27,7 @@
     "verdon": "bin/verdon"
   },
   "dependencies": {
-    "avsc": "^5.0.0-rc.5",
+    "avsc": "^5.0.0-rc.9",
     "chalk": "^1.1.3",
     "commander": "^2.9.0",
     "request": "^2.79.0"
