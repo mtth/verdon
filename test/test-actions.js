@@ -91,7 +91,7 @@ suite('actions', function () {
       let sawHeader = false;
       svc.createServer()
         .use(function (wreq, wres, next) {
-          assert(buf.equals(wreq.getHeader().foo));
+          assert(buf.equals(wreq.headers.foo));
           sawHeader = true;
           next();
         })
@@ -156,7 +156,7 @@ suite('actions', function () {
       svc.createServer().createStub(tps[1]);
       actions.createClient(tps[0], {}, function (err, client) {
         assert.equal(err, null);
-        assert.deepEqual(client.getService().getProtocol(), ptcl);
+        assert.deepEqual(client.service.protocol, ptcl);
       });
     });
 
@@ -166,7 +166,7 @@ suite('actions', function () {
       const ptcl = {protocol: 'Empty'};
       actions.createClient(tps[0], opts, function (err, client) {
         assert.equal(err, null);
-        assert.deepEqual(client.getService().getProtocol(), ptcl);
+        assert.deepEqual(client.service.protocol, ptcl);
         done();
       });
 
