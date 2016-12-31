@@ -62,7 +62,7 @@ suite('actions', function () {
       const svc = avro.Service.forProtocol(ptcl);
       svc.createServer()
         .onUpper(function (str, cb) { cb(null, str.toUpperCase()); })
-        .createStub(tps[1]);
+        .createChannel(tps[1]);
       actions.call(tps[0], 'upper', '{"s": "ab"}', {}, function (err, str) {
         assert.ifError(err);
         assert.equal(str, '"AB"');
@@ -74,7 +74,7 @@ suite('actions', function () {
       const tps = createTransports();
       const ptcl = avro.readProtocol('protocol Echo{string upper(string s);}');
       const svc = avro.Service.forProtocol(ptcl);
-      svc.createServer().createStub(tps[1]);
+      svc.createServer().createChannel(tps[1]);
       actions.call(tps[0], 'lower', '{}', {}, function (err) {
         assert(/no such message/.test(err), err);
         done();
@@ -96,7 +96,7 @@ suite('actions', function () {
           next();
         })
         .onUpper(function (str, cb) { cb(null, str.toUpperCase()); })
-        .createStub(tps[1]);
+        .createChannel(tps[1]);
       const opts = {
         header: [{key: 'foo', name: 'string', val: stringType.toString(val)}]
       };
@@ -115,7 +115,7 @@ suite('actions', function () {
       const tps = createTransports();
       const ptcl = avro.readProtocol('protocol Ping { int ping(); }');
       const svc = avro.Service.forProtocol(ptcl);
-      svc.createServer().createStub(tps[1]);
+      svc.createServer().createChannel(tps[1]);
       actions.info(tps[0], 'ping', {json: true}, function (err, str) {
         assert.ifError(err);
         assert.equal(str, JSON.stringify(ptcl.messages.ping));
@@ -127,7 +127,7 @@ suite('actions', function () {
       const tps = createTransports();
       const ptcl = avro.readProtocol('protocol Ping { int ping(); }');
       const svc = avro.Service.forProtocol(ptcl);
-      svc.createServer().createStub(tps[1]);
+      svc.createServer().createChannel(tps[1]);
       actions.info(tps[0], undefined, {json: true}, function (err, str) {
         assert.ifError(err);
         assert.equal(str, JSON.stringify(ptcl));
@@ -139,7 +139,7 @@ suite('actions', function () {
       const tps = createTransports();
       const ptcl = avro.readProtocol('protocol Ping { int ping(); }');
       const svc = avro.Service.forProtocol(ptcl);
-      svc.createServer().createStub(tps[1]);
+      svc.createServer().createChannel(tps[1]);
       actions.info(tps[0], 'pong', {json: true}, function (err) {
         assert(/no such message/.test(err), err);
         done();
@@ -153,7 +153,7 @@ suite('actions', function () {
       const tps = createTransports();
       const ptcl = avro.readProtocol('protocol Ping { int ping(); }');
       const svc = avro.Service.forProtocol(ptcl);
-      svc.createServer().createStub(tps[1]);
+      svc.createServer().createChannel(tps[1]);
       actions.createClient(tps[0], {}, function (err, client) {
         assert.equal(err, null);
         assert.deepEqual(client.service.protocol, ptcl);

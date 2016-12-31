@@ -23,7 +23,7 @@ suite('tracing', function () {
   setup(function (done) {
     server = createServer();
     client = createClient(server)
-      .once('stub', function () {
+      .once('channel', function () {
         done();
       });
   });
@@ -37,14 +37,14 @@ suite('tracing', function () {
     const trace = tracing.createTrace();
     server.onNeg(function (n, cb) {
       assert(this.locals.trace.uuid.equals(trace.uuid));
-      assert.strictEqual(this.stub.server, server);
+      assert.strictEqual(this.channel.server, server);
       cb(null, -n);
     });
     client.neg(10, {trace}, function (err, n) {
       assert.ifError(err);
       assert.equal(n, -10);
       assert.strictEqual(this.locals.trace, trace);
-      assert.strictEqual(this.stub.client, client);
+      assert.strictEqual(this.channel.client, client);
       assert.equal(trace.calls.length, 1);
       const call = trace.calls[0];
       assert.equal(call.name, 'neg');
@@ -67,7 +67,7 @@ suite('tracing', function () {
         });
       });
     createClient(hopServer)
-      .once('stub', function () {
+      .once('channel', function () {
         const trace = tracing.createTrace();
         this.neg(20, {trace}, function (err) {
           assert(/bar/.test(err), err);
@@ -91,7 +91,7 @@ suite('tracing', function () {
   });
 
   test('duplicate trace', function (done) {
-    server.activeStubs()[0].on('incomingCall', function (ctx) {
+    server.activeChannels()[0].on('incomingCall', function (ctx) {
       // Pre-populate a trace.
       ctx.locals.trace = tracing.createTrace();
     });
