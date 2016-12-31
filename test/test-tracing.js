@@ -20,12 +20,9 @@ suite('tracing', function () {
 
   let client, server;
 
-  setup(function (done) {
+  setup(function () {
     server = createServer();
-    client = createClient(server)
-      .once('channel', function () {
-        done();
-      });
+    client = createClient(server);
   });
 
   teardown(function () {
@@ -91,9 +88,10 @@ suite('tracing', function () {
   });
 
   test('duplicate trace', function (done) {
-    server.activeChannels()[0].on('incomingCall', function (ctx) {
-      // Pre-populate a trace.
-      ctx.locals.trace = tracing.createTrace();
+    server.once('channel', function (channel) {
+      channel.on('incomingCall', function (ctx) {
+        ctx.locals.trace = tracing.createTrace(); // Pre-populate a trace.
+      });
     });
     client.neg(3, {trace: tracing.createTrace()}, function (err) {
       assert(/duplicate trace/.test(err), err);
@@ -102,14 +100,10 @@ suite('tracing', function () {
   });
 
   function createClient(server) {
-    const client = svc.createClient({server});
-    client.use(tracing.clientTracing(client));
-    return client;
+    return svc.createClient({server}).use(tracing.clientTracing());
   }
 
   function createServer() {
-    const server = svc.createServer({silent: true});
-    server.use(tracing.serverTracing(server));
-    return server;
+    return svc.createServer({silent: true}).use(tracing.serverTracing());
   }
 });
