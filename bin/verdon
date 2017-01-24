@@ -8,57 +8,81 @@
 // TODO: Rename commands to more explicit names (e.g. start-mock-server).
 // TODO: Add command to check compatibility of two protocols.
 
+const actions = require('../lib/actions');
+
 const chalk = require('chalk');
 const commander = require('commander');
-const actions = require('../lib/actions');
-const utils = require('../lib/utils');
-
+const paramCase = require('param-case');
 
 commander
   .usage('\r  Usage:  verdon <command> [options] [<args> ...]')
   .version(require('../package').version)
-  .action(exiting(function (cmd, opts, cb) {
-    // Default handler, called when none of the commands below match.
-    cb(new Error(`unknown command \`${cmd}'`));
+  .action(exiting(function () {
+    // Default handler, called when none of the commands below match. Note that
+    // `arguments` is guaranteed to have at least length 1 (from `exiting`).
+    const cb = arguments[arguments.length - 1];
+    const err = new Error(
+      arguments.length > 1 ?
+      `unknown command \`${arguments[0]}'` :
+      'invalid command');
+    cb(err);
   }));
 
-commander.command('assemble')
-  .description(utils.indent(`
-    Assemble a protocol's IDL specification at path <protocol> into its
-    corresponding JSON representation. If <type> is specified, this type's
-    schema will be output instead.
-  `, 2))
-  .arguments('<protocol> [<type>]')
-  .action(exiting(actions.assemble));
+addActions(commander, [
+  {
+    name: 'call',
+    args: '<url> <message> [<request>]',
+    opts: [
+      ['--header <key:type:value>', 'JSON header', collectHeaders, []],
+      ['--protocol <path>', 'path to local protocol'],
+      ['--scope <string>', 'remote server scope']
+    ]
+  },
+  {
+    name: 'info',
+    args: '<url>',
+    opts: [
+      ['--message <name>', 'message'],
+      ['--type <name>', 'type'],
+      ['--json', 'output schema'],
+      ['--scope <string>', 'remote server scope']
+    ]
+  },
+  {
+    name: 'startProxy',
+    args: '<path>',
+    opts: [
+      ['--port <port>', 'port'],
+      ['--scope <string>', 'remote server scope']
+    ]
+  }
+]);
 
-commander.command('call')
-  .description(utils.indent(`
-    Send a message to a remote service listening at <url>. If no <request> is
-    specified, it will be read from standard in.
-  `, 2))
-  .arguments('<url> <message> [<request>]')
-  .option('--header <key:type:value>', 'JSON header', collectHeaders, [])
-  .option('--protocol <path>', 'path to local protocol')
-  .option('--scope <string>', 'remote service scope')
-  .option('--transport <path>', 'path to transport module')
-  .action(exiting(actions.call));
+// Helpers.
 
-commander.command('info')
-  .description(utils.indent(`
-    Retrieve a remote service's protocol and expose it in various forms.
-  `, 2))
-  .arguments('<url> [<message>]')
-  .option('--json', 'output JSON')
-  .option('--scope <string>', 'remote service scope')
-  .action(exiting(actions.info));
-
-commander.command('serve')
-  .description(utils.indent(`
-    Create a fake server.
-  `, 2))
-  .arguments('<address> <protocol>')
-  .option('--scope <string>', 'service scope')
-  .action(exiting(actions.serve));
+/** Gather and serialize headers. */
+function collectHeaders(hdr, acc) {
+  // --header 'key:type=jsonVal' or --header key=stringVal
+  const prefixEnd = hdr.indexOf('=');
+  if (!~prefixEnd) {
+    throw new Error(`invalid header: ${hdr}`);
+  }
+  const prefix = hdr.slice(0, prefixEnd);
+  const suffix = hdr.slice(prefixEnd + 1);
+  const keyEnd = prefix.indexOf(':');
+  acc.push(~keyEnd ?
+    {
+      key: prefix.slice(0, keyEnd),
+      name: prefix.slice(keyEnd + 1),
+      val: suffix
+    } :
+    {
+      key: prefix,
+      name: 'string',
+      val: `"${suffix}"` // Make this a valid JSON string.
+    });
+  return acc;
+}
 
 /** Wrap a function such that it exits when an error occurs. */
 function exiting(fn) {
@@ -85,28 +109,16 @@ function exiting(fn) {
   };
 }
 
-/** Gather and serialize headers. */
-function collectHeaders(hdr, acc) {
-  // --header 'key:type=jsonVal' or --header key=stringVal
-  const prefixEnd = hdr.indexOf('=');
-  if (!~prefixEnd) {
-    throw new Error(`invalid header: ${hdr}`);
+/** Register a command corresponding to an action. */
+function addActions(prog, arr) {
+  for (const params of arr) {
+    const cmd = prog.command(paramCase(params.name))
+      .action(exiting(actions[params.name]))
+      .arguments(params.args);
+    for (const opt of params.opts || []) {
+      cmd.option.apply(cmd, opt);
+    }
   }
-  const prefix = hdr.slice(0, prefixEnd);
-  const suffix = hdr.slice(prefixEnd + 1);
-  const keyEnd = prefix.indexOf(':');
-  acc.push(~keyEnd ?
-    {
-      key: prefix.slice(0, keyEnd),
-      name: prefix.slice(keyEnd + 1),
-      val: suffix
-    } :
-    {
-      key: prefix,
-      name: 'string',
-      val: `"${suffix}"` // Make this a valid JSON string.
-    });
-  return acc;
 }
 
 if (process.argv.length > 2) {

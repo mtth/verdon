@@ -10,10 +10,10 @@ const stream = require('stream');
 
 suite('actions', function () {
 
-  suite('assemble', function () {
+  suite('assembleProtocol', function () {
 
     test('existing protocol', function (done) {
-      actions.assemble('1.avdl', undefined, {importHook}, function (err, str) {
+      actions.assembleProtocol('1.avdl', {importHook}, function (err, str) {
         assert.ifError(err);
         assert.equal(str, '{"protocol":"Empty"}');
         done();
@@ -27,7 +27,8 @@ suite('actions', function () {
     });
 
     test('existing type', function (done) {
-      actions.assemble('1.avdl', 'Bar', {importHook}, function (err, str) {
+      const opts = {type: 'Bar', importHook};
+      actions.assembleProtocol('1.avdl', opts, function (err, str) {
         assert.ifError(err);
         assert.equal(str, '{"name":"Bar","type":"fixed","size":1}');
         done();
@@ -41,7 +42,8 @@ suite('actions', function () {
     });
 
     test('missing type', function (done) {
-      actions.assemble('1.avdl', 'Bar', {importHook}, function (err) {
+      const opts = {type: 'Bar', importHook};
+      actions.assembleProtocol('1.avdl', opts, function (err) {
         assert(/no such type/.test(err), err);
         done();
       });
@@ -154,7 +156,7 @@ suite('actions', function () {
       const ptcl = avro.readProtocol('protocol Ping { int ping(); }');
       const svc = avro.Service.forProtocol(ptcl);
       svc.createServer().createChannel(tps[1]);
-      actions.createClient(tps[0], {}, function (err, client) {
+      actions._createClient(tps[0], {}, function (err, client) {
         assert.equal(err, null);
         assert.deepEqual(client.service.protocol, ptcl);
       });
@@ -164,7 +166,7 @@ suite('actions', function () {
       const tps = createTransports();
       const opts = {protocol: 'empty.avdl', importHook};
       const ptcl = {protocol: 'Empty'};
-      actions.createClient(tps[0], opts, function (err, client) {
+      actions._createClient(tps[0], opts, function (err, client) {
         assert.equal(err, null);
         assert.deepEqual(client.service.protocol, ptcl);
         done();
