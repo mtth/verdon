@@ -73,6 +73,7 @@ suite('utils', function () {
       server.onNeg(function (n, cb) { cb({MathError: {code: 123}}); });
       client.neg(2).catch(MathError, function (err) {
         assert.equal(err.code, 123);
+        assert.strictEqual(this.channel.client, client);
         done();
       });
     });
@@ -94,8 +95,28 @@ suite('utils', function () {
       client.neg(2, function (err, n) {
         assert.ifError(err);
         assert.equal(n, -2);
+        assert.strictEqual(this.channel.client, client);
         done();
       });
+    });
+
+    test('promisify client middleware early return', function (done) {
+      utils.promisify(client);
+      server.onNeg(function (n, cb) { cb(null, -n); });
+      client
+        .use(function (wreq, wres, next) {
+          wreq.request = {n: 1};
+          this.locals.one = 1;
+          setTimeout(function () {
+            next();
+          }, 10);
+          return Promise.reject(new Error('bar'));
+        })
+        .neg(2).catch(function (err) {
+          assert(/early/.test(err), err);
+          assert.strictEqual(this.locals.one, 1);
+          done();
+        });
     });
 
     test('promisify server throw system error', function (done) {
@@ -201,8 +222,10 @@ suite('utils', function () {
       utils.promisify(server);
       server
         .use(function (wreq, wres, next) {
+          assert.strictEqual(this.channel.server, server);
           wreq.request = {n: 1};
           return next().then(function () {
+            assert.strictEqual(this.channel.server, server);
             wres.response = -1;
           });
         })
@@ -215,23 +238,6 @@ suite('utils', function () {
         assert.equal(n, -1);
         done();
       });
-    });
-
-    test('promisify client middleware', function (done) {
-      utils.promisify(client);
-      server.onNeg(function (n, cb) { cb(null, -n); });
-      client
-        .use(function (wreq, wres, next) {
-          wreq.request = {n: 1};
-          setTimeout(function () {
-            next();
-          }, 10);
-          return Promise.reject(new Error('bar'));
-        })
-        .neg(2).catch(function (err) {
-          assert(/early/.test(err), err);
-          done();
-        });
     });
   });
 });
