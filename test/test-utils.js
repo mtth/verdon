@@ -239,5 +239,26 @@ suite('utils', function () {
         done();
       });
     });
+
+    test('promisify server middleware callback api', function (done) {
+      utils.promisify(server);
+      let called = false;
+      server
+        .use(function (wreq, wres, next) {
+          next().then(function () {
+            called = true;
+          });
+          // Don't return anything so the callback API will be used.
+        })
+        .onNeg(function (n) {
+          return -n;
+        });
+      client.neg(2, function (err, n) {
+        assert.ifError(err);
+        assert.equal(n, -2);
+        assert(called);
+        done();
+      });
+    });
   });
 });
