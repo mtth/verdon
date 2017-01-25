@@ -4,6 +4,7 @@
 
 const utils = require('../lib/utils');
 
+const Promise = require('bluebird');
 const assert = require('assert');
 const avro = require('avsc');
 
@@ -15,7 +16,17 @@ suite('utils', function () {
     const svc = avro.Service.forProtocol({
       protocol: 'Math',
       messages: {
-        neg: {request: [{name: 'n', type: 'int'}], response: 'int'},
+        neg: {
+          request: [{name: 'n', type: 'int'}],
+          response: 'int',
+          errors: [
+            {
+              type: 'error',
+              name: 'MathError',
+              fields: [{name: 'code', type: 'int'}]
+            }
+          ]
+        },
         max: {
           request: [
             {name: 'n1', type: 'int'},
@@ -24,7 +35,7 @@ suite('utils', function () {
           response: 'int'
         }
       }
-    });
+    }, {wrapUnions: true});
 
     let client, server;
 
@@ -56,11 +67,52 @@ suite('utils', function () {
       });
     });
 
-    test('promisify server throws system error', function (done) {
+    test('promisify client catch wrapped custom error', function (done) {
+      utils.promisify(client);
+      const MathError = svc.type('MathError').recordConstructor;
+      server.onNeg(function (n, cb) { cb({MathError: {code: 123}}); });
+      client.neg(2).catch(MathError, function (err) {
+        assert.equal(err.code, 123);
+        done();
+      });
+    });
+
+    test('promisify client catch wrapped custom error', function (done) {
+      utils.promisify(client);
+      const err = new Error('bar');
+      server.onNeg(function (n, cb) { cb(err); });
+      client.neg(2).catch(function (err_) {
+        assert(err_ instanceof Error);
+        assert(/bar/.test(err_), err_);
+        done();
+      });
+    });
+
+    test('promisify client callback api', function (done) {
+      utils.promisify(client);
+      server.onNeg(function (n, cb) { cb(null, -n); });
+      client.neg(2, function (err, n) {
+        assert.ifError(err);
+        assert.equal(n, -2);
+        done();
+      });
+    });
+
+    test('promisify server throw system error', function (done) {
       utils.promisify(server);
       server.onNeg(function () { throw new Error('bar'); });
       client.neg(2, function (err) {
         assert(/bar/.test(err), err);
+        done();
+      });
+    });
+
+    test('promisify server throw custom error', function (done) {
+      utils.promisify(server);
+      const MathError = svc.type('MathError').recordConstructor;
+      server.onNeg(function () { throw new MathError(123); });
+      client.neg(2, function (err) {
+        assert.equal(err.MathError.code, 123);
         done();
       });
     });
@@ -85,19 +137,35 @@ suite('utils', function () {
       });
     });
 
-    test('promisify server middleware', function (done) {
+    test('promisify server callback api', function (done) {
+      utils.promisify(server);
+      server.onMax(function (n1, n2, cb) { cb(null, Math.max(n1, n2)); });
+      client.max(2, 3, function (err, n) {
+        assert.ifError(err);
+        assert.equal(n, 3);
+        done();
+      });
+    });
+
+    test('promisify server middleware propagate error', function (done) {
       utils.promisify(server);
       const arr = [];
       server
         .use(function (wreq, wres, next) {
           arr.push('in');
-          return next().then(function () {
+          return next().catch(function (err) {
             arr.push('out');
+            wres.error = {string: err.message};
           });
         })
-        .onNeg(function () {
+        .use(function (wreq, wres, next) {
           arr.push('on');
-          throw new Error('bar');
+          if (true) {
+            throw new Error('bar');
+          } else {
+            // Avoid the `next` unused argument.
+            next();
+          }
         });
       client.neg(2, function (err) {
         assert(/bar/.test(err), err);
@@ -106,7 +174,7 @@ suite('utils', function () {
       });
     });
 
-    test('promisify server middleware error', function (done) {
+    test('promisify server middleware swallow error', function (done) {
       utils.promisify(server);
       const arr = [];
       server
@@ -114,19 +182,56 @@ suite('utils', function () {
           arr.push('in');
           return next().catch(function () {
             arr.push('out');
-            return null;
-            // TODO: Check why the baz error is still propagated here. The null
-            // should override it (and lead to a different error).
+            wres.response = -3;
           });
         })
         .use(function (wreq, wres, next) {
-          throw new Error('baz');
+          arr.push('on');
+          next(new Error('baz'), function () {});
         });
-      client.neg(2, function (err) {
-        // assert(/baz/.test(err), err);
-        assert.deepEqual(arr, ['in', 'out']);
+      client.neg(2, function (err, n) {
+        assert.ifError(err);
+        assert.equal(n, -3);
+        assert.deepEqual(arr, ['in', 'on', 'out']);
         done();
       });
+    });
+
+    test('promisify server middleware', function (done) {
+      utils.promisify(server);
+      server
+        .use(function (wreq, wres, next) {
+          wreq.request = {n: 1};
+          return next().then(function () {
+            wres.response = -1;
+          });
+        })
+        .onNeg(function (n, cb) {
+          assert.equal(n, 1);
+          cb(null, -2);
+        });
+      client.neg(2, function (err, n) {
+        assert.ifError(err);
+        assert.equal(n, -1);
+        done();
+      });
+    });
+
+    test('promisify client middleware', function (done) {
+      utils.promisify(client);
+      server.onNeg(function (n, cb) { cb(null, -n); });
+      client
+        .use(function (wreq, wres, next) {
+          wreq.request = {n: 1};
+          setTimeout(function () {
+            next();
+          }, 10);
+          return Promise.reject(new Error('bar'));
+        })
+        .neg(2).catch(function (err) {
+          assert(/early/.test(err), err);
+          done();
+        });
     });
   });
 });
