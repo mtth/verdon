@@ -100,10 +100,10 @@ suite('tracing', function () {
   });
 
   function createClient(server) {
-    return svc.createClient({server}).use(tracing.clientTracing());
+    return svc.createClient({server}).use(tracing.tracing());
   }
 
   function createServer() {
-    return svc.createServer({silent: true}).use(tracing.serverTracing());
+    return svc.createServer({silent: true}).use(tracing.tracing());
   }
 });

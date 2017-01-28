@@ -119,6 +119,32 @@ suite('utils', function () {
         });
     });
 
+  test('promisify client middleware custom errors', function (done) {
+    utils.promisify(client);
+    const MathError = svc.type('MathError').recordConstructor;
+    client
+      .use(function (wreq, wres, next) {
+        return next().catch(function (err) {
+          const type = err && err.constructor && err.constructor.type;
+          if (type && type.typeName === 'error') {
+            wres.error = this.message.errorType.typeName === 'union:wrapped' ?
+              err.wrapped() :
+              err;
+          } else {
+            throw err;
+          }
+        });
+      })
+      .use(function (wreq, wres, next) {
+        return next().then(function () { throw new MathError(123); });
+      })
+      .neg(2)
+        .catch(function (err) {
+          assert.equal(err.code, 123);
+          done();
+        });
+  });
+
     test('promisify server throw system error', function (done) {
       utils.promisify(server);
       server.onNeg(function () { throw new Error('bar'); });
