@@ -128,7 +128,7 @@ suite('utils', function () {
           const type = err && err.constructor && err.constructor.type;
           if (type && type.typeName === 'error') {
             wres.error = this.message.errorType.typeName === 'union:wrapped' ?
-              err.wrapped() :
+              err.wrap() :
               err;
           } else {
             throw err;
