@@ -50,6 +50,50 @@ suite('proxy', function () {
       .listen(8080);
   });
 
+  test('connect method custom receiver ok', function (done) {
+    let sawHeaders = false;
+    let sawSocket = false;
+    const p = proxy.createProxy(function (hdrs, cb) {
+      assert.equal(hdrs.one, 1);
+      sawHeaders = true;
+      cb(null, function (channel, sock) {
+        assert.strictEqual(channel.server.service, svc);
+        sawSocket = !!sock;
+      });
+    }).mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+    p.server
+      .on('listening', function () {
+        const opts = {headers: {one: 1}, port: 8080};
+        proxy.startTunnel('/', opts, function (err, tunnel) {
+          assert.ifError(err);
+          client.createChannel(tunnel);
+          client.neg(2, function (err, n) {
+            assert.ifError(err);
+            assert.equal(n, -2);
+            client.destroyChannels();
+            p.server.close();
+          });
+        });
+      })
+      .on('close', function () { done(); })
+      .listen(8080);
+  });
+
+  test('connect method custom receiver no', function (done) {
+    const p = proxy.createProxy(function (hdrs, cb) {
+      cb(new Error('foo'));
+    }).mount('/', server);
+    p.server
+      .on('listening', function () {
+        proxy.startTunnel('/', {port: 8080}, function (err) {
+          assert(/foo/.test(err), err);
+          p.server.close();
+        });
+      })
+      .on('close', function () { done(); })
+      .listen(8080);
+  });
+
   test('connect method missing mount', function (done) {
     const p = proxy.createProxy()
       .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
