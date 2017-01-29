@@ -1,6 +1,6 @@
 {
   "name": "verdon",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Avro RPC command line interface",
   "main": "./lib",
   "files": [
@@ -28,13 +28,13 @@
   },
   "dependencies": {
     "avsc": "rc",
-    "bluebird": "^3.4.7"
+    "bluebird": "^3.4.7",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "coveralls": "^2.11.15",
     "istanbul": "^0.4.5",
-    "mocha": "^3.2.0",
-    "uuid": "^3.0.1"
+    "mocha": "^3.2.0"
   },
   "scripts": {
     "cover": "istanbul cover _mocha",
