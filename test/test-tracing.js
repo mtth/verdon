@@ -88,13 +88,9 @@ suite('tracing', function () {
   });
 
   test('duplicate trace', function (done) {
-    server.once('channel', function (channel) {
-      channel.on('incomingCall', function (ctx) {
-        ctx.locals.trace = tracing.createTrace(); // Pre-populate a trace.
-      });
-    });
+    server.use(tracing.enableTracing());
     client.neg(3, {trace: tracing.createTrace()}, function (err) {
-      assert(/duplicate trace/.test(err), err);
+      assert(/internal server error/.test(err), err);
       done();
     });
   });
