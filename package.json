@@ -27,7 +27,7 @@
     "verdon": "bin/verdon"
   },
   "dependencies": {
-    "avsc": "rc",
+    "avsc": "^5.0.3",
     "bluebird": "^3.4.7",
     "uuid": "^3.0.1"
   },
