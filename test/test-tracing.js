@@ -100,7 +100,8 @@ suite('tracing', function () {
   });
 
   function createClient(server) {
-    return svc.createClient({server}).use(tracing.enableTracing());
+    return svc.createClient({buffering: true, server})
+      .use(tracing.enableTracing());
   }
 
   function createServer() {

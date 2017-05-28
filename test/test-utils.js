@@ -41,7 +41,7 @@ suite('utils', function () {
 
     setup(function () {
       server = svc.createServer({silent: true});
-      client = svc.createClient({server});
+      client = svc.createClient({buffering: true, server});
     });
 
     teardown(function () {
