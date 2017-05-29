@@ -35,7 +35,7 @@ suite('proxy', function () {
       .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('connect', p.tunnelHandler())
+      .on('connect', p.connectHandler())
       .on('listening', function () {
         proxy.startTunnel('http://localhost:8080', function (err, tunnel) {
           assert.ifError(err);
@@ -65,7 +65,7 @@ suite('proxy', function () {
     }).bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('connect', p.tunnelHandler())
+      .on('connect', p.connectHandler())
       .on('listening', function () {
         const opts = {headers: {one: 1}};
         proxy.startTunnel('http://localhost:8080', opts, function (err, tunnel) {
@@ -89,7 +89,7 @@ suite('proxy', function () {
     }).bind(server);
     const httpServer = http.createServer();
     httpServer
-      .on('connect', p.tunnelHandler())
+      .on('connect', p.connectHandler())
       .on('listening', function () {
         proxy.startTunnel('http://localhost:8080', function (err) {
           assert(/foo/.test(err), err);
@@ -105,7 +105,7 @@ suite('proxy', function () {
       .bind(server.onNeg(function (n, cb) { cb(null, -n); }), {scope: 'math'});
     const httpServer = http.createServer();
     httpServer
-      .on('connect', p.tunnelHandler())
+      .on('connect', p.connectHandler())
       .on('listening', function () {
         proxy.startTunnel('http://localhost:8080', function (err) {
           assert(/Not Found/.test(err), err);
@@ -134,10 +134,13 @@ suite('proxy', function () {
       .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('request', p.requestHandler())
+      .on('request', p.postRequestHandler())
       .on('listening', function () {
-        http.request({method: 'POST', port: 8080})
-          .on('response', function (res) {
+        http.request({
+          method: 'POST',
+          port: 8080,
+          headers: {'content-type': 'avro/json'}
+        }).on('response', function (res) {
             assert.equal(res.statusCode, 200);
             httpServer.close();
           })
@@ -152,10 +155,13 @@ suite('proxy', function () {
       .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('request', p.requestHandler())
+      .on('request', p.postRequestHandler())
       .on('listening', function () {
-        http.request({method: 'POST', port: 8080})
-          .on('response', function (res) {
+        http.request({
+          method: 'POST',
+          port: 8080,
+          headers: {'content-type': 'avro/json'}
+        }).on('response', function (res) {
             assert.equal(res.statusCode, 400);
             httpServer.close();
           })

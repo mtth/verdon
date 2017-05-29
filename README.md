@@ -21,7 +21,7 @@ const protocol = avro.readProtocol(`
 const logServer = avro.Service.forProtocol(protocol).createServer()
   .onLog(function (level, msg) { console.log(`${level}: ${msg}`); });
 
-const proxy = verdon.createProxy().bind(logServer);
+const proxy = verdon.createProxy().bindServer(logServer);
 
 http.createServer()
   .on('upgrade', proxy.webSocketHandler())
