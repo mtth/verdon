@@ -32,7 +32,7 @@ suite('proxy', function () {
 
   test('connect method', function (done) {
     const p = proxy.createProxy()
-      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bindServer(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.connectHandler())
@@ -62,7 +62,7 @@ suite('proxy', function () {
         assert.strictEqual(channel.server.service, svc);
         sawSocket = !!sock;
       });
-    }).bind(server.onNeg(function (n, cb) { cb(null, -n); }));
+    }).bindServer(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.connectHandler())
@@ -86,7 +86,7 @@ suite('proxy', function () {
   test('connect method custom receiver no', function (done) {
     const p = proxy.createProxy(function (hdrs, cb) {
       cb(new Error('foo'));
-    }).bind(server);
+    }).bindServer(server);
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.connectHandler())
@@ -101,8 +101,8 @@ suite('proxy', function () {
   });
 
   test('connect method missing binding', function (done) {
-    const p = proxy.createProxy()
-      .bind(server.onNeg(function (n, cb) { cb(null, -n); }), {scope: 'math'});
+    const p = proxy.createProxy().bindServer(
+      server.onNeg(function (n, cb) { cb(null, -n); }), {scope: 'math'});
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.connectHandler())
@@ -131,7 +131,7 @@ suite('proxy', function () {
 
   test('post method ok', function (done) {
     const p = proxy.createProxy()
-      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bindServer(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('request', p.postRequestHandler())
@@ -152,7 +152,7 @@ suite('proxy', function () {
 
   test('post method missing message', function (done) {
     const p = proxy.createProxy()
-      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bindServer(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('request', p.postRequestHandler())
