@@ -88,7 +88,7 @@ suite('tracing', function () {
   });
 
   test('duplicate trace', function (done) {
-    server.use(tracing.enableTracing());
+    server.use(tracing.serverTracing());
     client.neg(3, {trace: tracing.createTrace()}, function (err) {
       assert(/internal server error/.test(err), err);
       done();
@@ -97,10 +97,10 @@ suite('tracing', function () {
 
   function createClient(server) {
     return svc.createClient({buffering: true, server})
-      .use(tracing.enableTracing());
+      .use(tracing.clientTracing());
   }
 
   function createServer() {
-    return svc.createServer({silent: true}).use(tracing.enableTracing());
+    return svc.createServer({silent: true}).use(tracing.serverTracing());
   }
 });

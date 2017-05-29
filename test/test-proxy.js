@@ -134,7 +134,7 @@ suite('proxy', function () {
       .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('request', p.requestListener())
+      .on('request', p.requestHandler())
       .on('listening', function () {
         http.request({method: 'POST', port: 8080})
           .on('response', function (res) {
@@ -152,7 +152,7 @@ suite('proxy', function () {
       .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
-      .on('request', p.requestListener())
+      .on('request', p.requestHandler())
       .on('listening', function () {
         http.request({method: 'POST', port: 8080})
           .on('response', function (res) {
