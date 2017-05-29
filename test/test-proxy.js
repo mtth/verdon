@@ -108,7 +108,7 @@ suite('proxy', function () {
       .on('connect', p.connectHandler())
       .on('listening', function () {
         proxy.startTunnel('http://localhost:8080', function (err) {
-          assert(/Not Found/.test(err), err);
+          assert(/Bad Request/.test(err), err);
           httpServer.close();
         });
       })
