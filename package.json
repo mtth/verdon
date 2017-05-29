@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "avsc": "^5.0.3",
-    "bluebird": "^3.4.7",
+    "bluebird": "^3.5.0",
     "uuid": "^3.0.1",
     "websocket-stream": "^5.0.0",
     "ws": "^3.0.0"

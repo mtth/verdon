@@ -32,12 +32,12 @@ suite('proxy', function () {
 
   test('connect method', function (done) {
     const p = proxy.createProxy()
-      .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.tunnelHandler())
       .on('listening', function () {
-        proxy.startTunnel('/', {port: 8080}, function (err, tunnel) {
+        proxy.startTunnel('http://localhost:8080', function (err, tunnel) {
           assert.ifError(err);
           client.createChannel(tunnel);
           client.neg(2, function (err, n) {
@@ -62,13 +62,13 @@ suite('proxy', function () {
         assert.strictEqual(channel.server.service, svc);
         sawSocket = !!sock;
       });
-    }).mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+    }).bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.tunnelHandler())
       .on('listening', function () {
-        const opts = {headers: {one: 1}, port: 8080};
-        proxy.startTunnel('/', opts, function (err, tunnel) {
+        const opts = {headers: {one: 1}};
+        proxy.startTunnel('http://localhost:8080', opts, function (err, tunnel) {
           assert.ifError(err);
           client.createChannel(tunnel);
           client.neg(2, function (err, n) {
@@ -86,12 +86,12 @@ suite('proxy', function () {
   test('connect method custom receiver no', function (done) {
     const p = proxy.createProxy(function (hdrs, cb) {
       cb(new Error('foo'));
-    }).mount('/', server);
+    }).bind(server);
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.tunnelHandler())
       .on('listening', function () {
-        proxy.startTunnel('/', {port: 8080}, function (err) {
+        proxy.startTunnel('http://localhost:8080', function (err) {
           assert(/foo/.test(err), err);
           httpServer.close();
         });
@@ -100,14 +100,14 @@ suite('proxy', function () {
       .listen(8080);
   });
 
-  test('connect method missing mount', function (done) {
+  test('connect method missing binding', function (done) {
     const p = proxy.createProxy()
-      .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bind(server.onNeg(function (n, cb) { cb(null, -n); }), {scope: 'math'});
     const httpServer = http.createServer();
     httpServer
       .on('connect', p.tunnelHandler())
       .on('listening', function () {
-        proxy.startTunnel('/foo', {port: 8080}, function (err) {
+        proxy.startTunnel('http://localhost:8080', function (err) {
           assert(/Not Found/.test(err), err);
           httpServer.close();
         });
@@ -120,7 +120,7 @@ suite('proxy', function () {
     const httpServer = http.createServer();
     httpServer
       .on('listening', function () {
-        proxy.startTunnel('/', {port: 8080}, function (err) {
+        proxy.startTunnel('http://localhost:8080', function (err) {
           assert(/socket hang up/.test(err), err);
           httpServer.close();
         });
@@ -131,7 +131,7 @@ suite('proxy', function () {
 
   test('post method ok', function (done) {
     const p = proxy.createProxy()
-      .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('request', p.requestHandler())
@@ -149,7 +149,7 @@ suite('proxy', function () {
 
   test('post method missing message', function (done) {
     const p = proxy.createProxy()
-      .mount('/', server.onNeg(function (n, cb) { cb(null, -n); }));
+      .bind(server.onNeg(function (n, cb) { cb(null, -n); }));
     const httpServer = http.createServer();
     httpServer
       .on('request', p.requestHandler())
