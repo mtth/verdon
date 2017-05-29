@@ -18,9 +18,7 @@ const protocol = avro.readProtocol(`
   }
 `);
 
-const logServer = avro.Service
-  .forProtocol(protocol)
-  .createServer()
+const logServer = avro.Service.forProtocol(protocol).createServer()
   .onLog(function (level, msg) { console.log(`${level}: ${msg}`); });
 
 const proxy = verdon.createProxy().bind(logServer);
@@ -38,16 +36,12 @@ const ws = require('websocket-stream');
 
 const protocol = avro.readProtocol(`
   protocol RemoteLogService {
-    enum Level { DEBUG, INFO, WARNING }
-    void log(Level level, string message);
+    void log(enum { INFO, WARNING } level, string message);
   }
 `);
 
-const logClient = avro.Service
-  .forProtocol(protocol)
-  .createClient({buffering: true});
-
-logClient.createChannel(ws('ws://localhost:8080'));
+const logClient = avro.Service.forProtocol(protocol)
+  .createClient({buffering: true, transport: ws('ws://localhost:8080')});
 
 logClient.log('INFO', 'We are now live!');
 
