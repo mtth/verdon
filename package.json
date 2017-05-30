@@ -1,10 +1,9 @@
 {
   "name": "verdon",
-  "version": "0.3.0",
+  "version": "0.3.4",
   "description": "Avro RPC command line interface",
   "main": "./lib",
   "files": [
-    "bin",
     "lib"
   ],
   "keywords": [
@@ -22,9 +21,6 @@
   },
   "engines": {
     "node": ">=6.0.0"
-  },
-  "bin": {
-    "verdon": "bin/verdon"
   },
   "dependencies": {
     "avsc": "^5.0.3",
